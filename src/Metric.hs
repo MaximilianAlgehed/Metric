@@ -4,6 +4,20 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE DataKinds #-}
+module Metric (module GHC.TypeLits,
+              Unit,
+              Metre,
+              Second,
+              (:*),
+              (:/),
+              (.*),
+              (.+),
+              (./),
+              emb,
+              rep,
+              (:^:),
+              (:*:),
+              (:/:)) where
 import GHC.TypeLits
 
 data ((a :: * -> *) :* (b :: * -> *)) c = Times  c 
@@ -11,6 +25,13 @@ data ((a :: * -> *) :/ (b :: * -> *)) c = Div    c
 data Unit a     = Unit   a
 data Metre a    = Metre  a
 data Second a   = Second a
+
+instance (Repd (f a), Num (Rep (f a))) => Num (f a) where
+  (+) = undefined
+  (*) = undefined
+  abs = undefined
+  signum = undefined
+  fromInteger = emb . fromInteger
 
 class Repd a where
   type Rep a :: *
