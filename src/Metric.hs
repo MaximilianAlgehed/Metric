@@ -6,77 +6,55 @@
 {-# LANGUAGE DataKinds #-}
 import GHC.TypeLits
 
-data (a :* b) = Times (Rep a)
-data (a :/ b) = Div   (Rep a)
-data Unit a   = Unit  (Rep a)
-data Metre a  = Metre (Rep a)
-data Second a = Second (Rep a)
-
-instance (Repd a, Show (Rep a)) => Show (Unit a) where
-  show = show . rep
-
-instance (Repd a, Show (Rep a)) => Show (Metre a) where
-  show = show . rep
-
-instance (Repd a, Show (Rep a)) => Show (Second a) where
-  show = show . rep
-
-instance (Show (Rep (a :* b)), Repd (a :* b)) => Show (a :* b) where
-  show = show . rep
-
-instance (Show (Rep (a :/ b)), Repd (a :/ b)) => Show (a :/ b) where
-  show = show . rep
+data ((a :: * -> *) :* (b :: * -> *)) c = Times  c 
+data ((a :: * -> *) :/ (b :: * -> *)) c = Div    c 
+data Unit a     = Unit   a
+data Metre a    = Metre  a
+data Second a   = Second a
 
 class Repd a where
   type Rep a :: *
   rep :: a -> Rep a
   emb :: Rep a -> a
 
-instance Repd Int where
-  type Rep Int = Int
-  rep = id
-  emb = id
+instance (Repd (f a), Show (Rep (f a))) => Show (f a) where
+  show = show . rep
 
-instance Repd Float where
-  type Rep Float = Float
-  rep = id
-  emb = id
-
-instance (Repd a, Repd b, Rep a ~ Rep b) => Repd (a :* b) where
-  type Rep (a :* b) = Rep a
+instance Repd ((a :* b) c) where
+  type Rep ((a :* b) c) = c
   rep (Times x) = x
   emb = Times
 
-instance (Repd a, Repd b, Rep a ~ Rep b) => Repd (a :/ b) where
-  type Rep (a :/ b) = Rep a
+instance Repd ((a :/ b) c) where
+  type Rep ((a :/ b) c) = c
   rep (Div x) = x
   emb = Div
 
-instance (Repd a) => Repd (Unit a) where
-  type Rep (Unit a) = Rep a
+instance Repd (Unit a) where
+  type Rep (Unit a) = a 
   rep (Unit x) = x
   emb = Unit
 
-instance (Repd a) => Repd (Metre a) where
-  type Rep (Metre a) = Rep a
+instance Repd (Metre a) where
+  type Rep (Metre a) = a
   rep (Metre x) = x
   emb = Metre
 
-instance (Repd a) => Repd (Second a) where
-  type Rep (Second a) = Rep a
+instance Repd (Second a) where
+  type Rep (Second a) = a
   rep (Second x) = x
   emb = Second
 
-type family (a :*: b) :: * where
+type family (a :*: b) :: * -> * where
   (a :/ b) :*: (c :/ d) = (a :*: c) :/: (b :*: d)
   (a :/ b) :*: c        = (a :*: c) :/: b 
   (a :* b) :*: c        = a :*: (b :*: c)
   a :*: (b :/ c)        = (a :*: b) :/: c
-  Unit x :*: a          = a
-  a :*: Unit x          = a
+  Unit :*: a            = a
+  a :*: Unit            = a
   a :*: b               = a :* b 
 
-type family (a :/: b) :: * where
+type family (a :/: b) :: * -> * where
   (a :/ b) :/: (c :/ d) = (a :*: d) :/: (b :*: c)
   (a :/ b) :/: c        = a :/: (b :*: c)
   a :/: (b :/ c)        = (a :*: c) :/: b
@@ -84,41 +62,41 @@ type family (a :/: b) :: * where
                           ((EliminatedL a c) :*: (Lower ((EliminatedU a c) :/: d))))
   a :/: c               = SortOut ((Upper ((EliminatedU a c))) :/ (EliminatedL a c))
 
-type family (SortOut a) :: * where
-  SortOut (a :/ (Unit x)) = a
-  SortOut a               = a
+type family (SortOut a) :: * -> * where
+  SortOut (a :/ Unit) = a
+  SortOut a           = a
 
-type family (Upper a) :: * where
+type family (Upper a) :: * -> * where
   Upper (a :/ b) = a
   Upper a        = a
 
-type family (Lower a) :: * where
+type family (Lower a) :: * -> * where
   Lower (a :/ b) = b
-  Lower a        = Unit (Rep a)
+  Lower a        = Unit
 
-type family (EliminatedU a b) :: * where
-  EliminatedU a a        = Unit (Rep a)
+type family (EliminatedU a b) :: * -> * where
+  EliminatedU a a        = Unit
   EliminatedU (a :* b) a = b
   EliminatedU (a :* b) c = a :*: (EliminatedU b c)
   EliminatedU a b        = a
 
-type family (EliminatedL a b) :: * where
-  EliminatedL a a        = Unit (Rep a)
-  EliminatedL (a :* b) a = Unit (Rep a)
+type family (EliminatedL a b) :: * -> * where
+  EliminatedL a a        = Unit
+  EliminatedL (a :* b) a = Unit
   EliminatedL (a :* b) c = EliminatedL b c
   EliminatedL a b = b
 
-type family (a :^: (n :: Nat)) :: * where
-  a :^: 0     = Unit (Rep a)
-  a :^: n     = a :*: (a :^: (n - 1))
+type family (a :^: (n :: Nat)) :: * -> * where
+  a :^: 0 = Unit
+  a :^: n = a :*: (a :^: (n - 1))
 
-(.*) :: (Repd a, Repd b, Repd (a :*: b), Rep a ~ Rep b, Rep (a :*: b) ~ Rep a, Num (Rep a)) => a -> b -> (a :*: b)
+(.*) :: (Repd (f a), Repd (g a), Num a, Rep (f a) ~ a, Rep (g a) ~ a, Rep ((f :*: g) a) ~ a, Repd ((f :*: g) a)) => f a -> g a -> (f :*: g) a
 a .* b = emb (rep a * rep b)
 
-(.+) :: (Repd a, Repd b, Num (Rep a), Rep a ~ Rep b, (a :/: b) ~ Unit (Rep a)) => a -> b -> a
+(.+) :: (Repd (f a), Repd (g a), Num a, Rep (f a) ~ a, Rep (g a) ~ a, (f :/: g) a ~ Unit a) => f a -> g a -> f a
 a .+ b = emb (rep a + rep b)
 
-(./) :: (Repd a, Repd b, Repd (a :/: b), Rep a ~ Rep b, Rep (a :/: b) ~ Rep a, Fractional (Rep a)) => a -> b -> (a :/: b)
+(./) :: (Repd (f a), Repd (g a), Fractional a, Rep (f a) ~ a, Rep (g a) ~ a, Rep ((f :/: g) a) ~ a, Repd ((f :/: g) a)) => f a -> g a -> (f :/: g) a
 a ./ b = emb (rep a / rep b)
 
 -- Examples
@@ -135,5 +113,5 @@ z = emb 2
 ex0 :: Unit Float
 ex0 = (x .* y ./ (y .* x)) .+ z
 
-ex1 :: Metre Float :/: (Second Float :^: 2)
+ex1 :: (Metre :/: (Second :^: 2)) Float
 ex1 = x ./ (y .* y)
