@@ -26,6 +26,7 @@ data Unit a     = Unit   a
 data Metre a    = Metre  a
 data Second a   = Second a
 
+{- Ugly hack for now -}
 instance (Repd (f a), Num (Rep (f a))) => Num (f a) where
   (+) = undefined
   (*) = undefined
