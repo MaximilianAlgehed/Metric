@@ -3,6 +3,8 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE DataKinds #-}
+import GHC.TypeLits
 
 data (a :* b) = Times (Rep a)
 data (a :/ b) = Div   (Rep a)
@@ -106,6 +108,10 @@ type family (EliminatedL a b) :: * where
   EliminatedL (a :* b) c = EliminatedL b c
   EliminatedL a b = b
 
+type family (a :^: (n :: Nat)) :: * where
+  a :^: 0     = Unit (Rep a)
+  a :^: n     = a :*: (a :^: (n - 1))
+
 (.*) :: (Repd a, Repd b, Repd (a :*: b), Rep a ~ Rep b, Rep (a :*: b) ~ Rep a, Num (Rep a)) => a -> b -> (a :*: b)
 a .* b = emb (rep a * rep b)
 
@@ -129,5 +135,5 @@ z = emb 2
 ex0 :: Unit Float
 ex0 = (x .* y ./ (y .* x)) .+ z
 
-ex1 :: Metre Float :/: (Second Float :*: Second Float)
+ex1 :: Metre Float :/: (Second Float :^: 2)
 ex1 = x ./ (y .* y)
