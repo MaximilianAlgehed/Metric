@@ -78,7 +78,6 @@ type family (a :/: b) :: * where
   (a :/ b) :/: (c :/ d) = (a :*: d) :/: (b :*: c)
   (a :/ b) :/: c        = a :/: (b :*: c)
   a :/: (b :/ c)        = (a :*: c) :/: b
-  (a :* b) :/: (a :* c) = b :/: c
   a :/: (c :* d)        = SortOut ((Upper ((EliminatedU a c) :/: d)) :/
                           ((EliminatedL a c) :*: (Lower ((EliminatedU a c) :/: d))))
   a :/: c               = SortOut ((Upper ((EliminatedU a c))) :/ (EliminatedL a c))
