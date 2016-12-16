@@ -75,8 +75,6 @@ type family (a :*: b) :: * where
   a :*: b               = a :* b 
 
 type family (a :/: b) :: * where
-  a :/: a               = Unit (Rep a)
-  a :/: (Unit b)        = a
   (a :/ b) :/: (c :/ d) = (a :*: d) :/: (b :*: c)
   (a :/ b) :/: c        = a :/: (b :*: c)
   a :/: (b :/ c)        = (a :*: c) :/: b
