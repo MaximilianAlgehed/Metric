@@ -1,6 +1,7 @@
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE UndecidableInstances #-}
 
 data (a :* b) = Times (Rep a)
@@ -8,6 +9,21 @@ data (a :/ b) = Div   (Rep a)
 data Unit a   = Unit  (Rep a)
 data Metre a  = Metre (Rep a)
 data Second a = Second (Rep a)
+
+instance (Repd a, Show (Rep a)) => Show (Unit a) where
+  show = show . rep
+
+instance (Repd a, Show (Rep a)) => Show (Metre a) where
+  show = show . rep
+
+instance (Repd a, Show (Rep a)) => Show (Second a) where
+  show = show . rep
+
+instance (Show (Rep (a :* b)), Repd (a :* b)) => Show (a :* b) where
+  show = show . rep
+
+instance (Show (Rep (a :/ b)), Repd (a :/ b)) => Show (a :/ b) where
+  show = show . rep
 
 class Repd a where
   type Rep a :: *
@@ -63,10 +79,11 @@ type family (a :/: b) :: * where
   a :/: (Unit b)        = a
   (a :/ b) :/: (c :/ d) = (a :*: d) :/: (b :*: c)
   (a :/ b) :/: c        = a :/: (b :*: c)
+  a :/: (b :/ c)        = (a :*: c) :/: b
   (a :* b) :/: (a :* c) = b :/: c
-  (a :* b) :/: (c :* d) = SortOut ((Upper ((a :*: (EliminatedU b c)) :/: d)) :/ ((EliminatedL b c) :*: (Lower ((a :*: (EliminatedU b c)) :/: d))))
-  (a :* b) :/: c        = SortOut ((Upper ((a :*: (EliminatedU b c)))) :/ (EliminatedL b c))
-  x :/: y = x :/ y
+  a :/: (c :* d)        = SortOut ((Upper ((EliminatedU a c) :/: d)) :/
+                          ((EliminatedL a c) :*: (Lower ((EliminatedU a c) :/: d))))
+  a :/: c               = SortOut ((Upper ((EliminatedU a c))) :/ (EliminatedL a c))
 
 type family (SortOut a) :: * where
   SortOut (a :/ (Unit x)) = a
@@ -95,14 +112,13 @@ type family (EliminatedL a b) :: * where
 (.*) :: (Repd a, Repd b, Repd (a :*: b), Rep a ~ Rep b, Rep (a :*: b) ~ Rep a, Num (Rep a)) => a -> b -> (a :*: b)
 a .* b = emb (rep a * rep b)
 
-(.+) :: (Repd a, Num (Rep a)) => a -> a -> a
+(.+) :: (Repd a, Repd b, Num (Rep a), Rep a ~ Rep b, (a :/: b) ~ Unit (Rep a)) => a -> b -> a
 a .+ b = emb (rep a + rep b)
 
 (./) :: (Repd a, Repd b, Repd (a :/: b), Rep a ~ Rep b, Rep (a :/: b) ~ Rep a, Fractional (Rep a)) => a -> b -> (a :/: b)
 a ./ b = emb (rep a / rep b)
 
 -- Examples
-
 x :: Metre Float
 x = emb 5
 
@@ -112,7 +128,7 @@ y = emb 3
 z :: Unit Float
 z = emb 2
 
--- Note that ex0 .+ ex1 gives a type error!
+-- Note that ex0 .+ ex1 gives a type error even though they are both represented as floats!
 ex0 :: Unit Float
 ex0 = (x .* y ./ (y .* x)) .+ z
 
