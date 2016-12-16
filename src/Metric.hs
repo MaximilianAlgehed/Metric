@@ -101,7 +101,7 @@ a .+ b = emb (rep a + rep b)
 (./) :: (Repd a, Repd b, Repd (a :/: b), Rep a ~ Rep b, Rep (a :/: b) ~ Rep a, Fractional (Rep a)) => a -> b -> (a :/: b)
 a ./ b = emb (rep a / rep b)
 
--- Example
+-- Examples
 
 x :: Metre Float
 x = emb 5
@@ -111,3 +111,10 @@ y = emb 3
 
 z :: Unit Float
 z = emb 2
+
+-- Note that ex0 .+ ex1 gives a type error!
+ex0 :: Unit Float
+ex0 = (x .* y ./ (y .* x)) .+ z
+
+ex1 :: Metre Float :/: (Second Float :*: Second Float)
+ex1 = x ./ (y .* y)
