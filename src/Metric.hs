@@ -6,20 +6,20 @@
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE ConstraintKinds #-}
 
-module Metric (module GHC.TypeLits,
-              Unit,
-              Metre,
-              Second,
-              (:*),
-              (:/),
-              (.*),
-              (.+),
-              (./),
-              emb,
-              rep,
-              (:^:),
-              (:*:),
-              (:/:)) where
+module Metric (module GHC.TypeLits
+              , Unit,
+              , Metre
+              , Second,
+              , (:*)
+              , (:/)
+              , (.*)
+              , (.+)
+              , (./)
+              , emb
+              , rep
+              , (:^:)
+              , (:*:)
+              , (:/:)) where
 import GHC.TypeLits
 
 data ((a :: * -> *) :* (b :: * -> *)) c = Times  c 
