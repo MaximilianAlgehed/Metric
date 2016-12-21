@@ -4,6 +4,8 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE DataKinds #-}
+{-# LANGUAGE ConstraintKinds #-}
+
 module Metric (module GHC.TypeLits,
               Unit,
               Metre,
@@ -30,6 +32,7 @@ data Second a   = Second a
 instance (Repd (f a), Num (Rep (f a))) => Num (f a) where
   (+) = undefined
   (*) = undefined
+  (-) = undefined
   abs = undefined
   signum = undefined
   fromInteger = emb . fromInteger
@@ -112,13 +115,15 @@ type family (a :^: (n :: Nat)) :: * -> * where
   a :^: 0 = Unit
   a :^: n = a :*: (a :^: (n - 1))
 
-(.*) :: (Repd (f a), Repd (g a), Num a, Rep (f a) ~ a, Rep (g a) ~ a, Rep ((f :*: g) a) ~ a, Repd ((f :*: g) a)) => f a -> g a -> (f :*: g) a
+type SameRep f g a = (Repd (f a), Repd (g a), Rep (f a) ~ a, Rep (g a) ~ a)
+
+(.*) :: (Num a, SameRep f g a, Rep ((f :*: g) a) ~ a, Repd ((f :*: g) a)) => f a -> g a -> (f :*: g) a
 a .* b = emb (rep a * rep b)
 
-(.+) :: (Repd (f a), Repd (g a), Num a, Rep (f a) ~ a, Rep (g a) ~ a, (f :/: g) a ~ Unit a) => f a -> g a -> f a
+(.+) :: (Num a, SameRep f g a, (f :/: g) a ~ Unit a) => f a -> g a -> f a
 a .+ b = emb (rep a + rep b)
 
-(./) :: (Repd (f a), Repd (g a), Fractional a, Rep (f a) ~ a, Rep (g a) ~ a, Rep ((f :/: g) a) ~ a, Repd ((f :/: g) a)) => f a -> g a -> (f :/: g) a
+(./) :: (Fractional a, SameRep f g a, Rep ((f :/: g) a) ~ a, Repd ((f :/: g) a)) => f a -> g a -> (f :/: g) a
 a ./ b = emb (rep a / rep b)
 
 -- Examples
