@@ -1,10 +1,10 @@
-{-# LANGUAGE TypeOperators #-}
-{-# LANGUAGE TypeFamilies #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE UndecidableInstances #-}
-{-# LANGUAGE DataKinds #-}
-{-# LANGUAGE ConstraintKinds #-}
+{-# LANGUAGE TypeOperators
+           , TypeFamilies
+           , FlexibleContexts
+           , FlexibleInstances
+           , UndecidableInstances
+           , DataKinds
+           , ConstraintKinds #-}
 
 module Metric (module GHC.TypeLits
               , Unit,
@@ -28,7 +28,7 @@ data Unit a     = Unit   a
 data Metre a    = Metre  a
 data Second a   = Second a
 
-{- Ugly hack for now -}
+{- Ugly hack for now, just to get "fromInteger" -}
 instance (Repd (f a), Num (Rep (f a))) => Num (f a) where
   (+) = undefined
   (*) = undefined
