@@ -7,9 +7,9 @@
            , ConstraintKinds #-}
 
 module Metric (module GHC.TypeLits
-              , Unit,
+              , Unit
               , Metre
-              , Second,
+              , Second
               , (:*)
               , (:/)
               , (.*)
@@ -122,6 +122,9 @@ a .* b = emb (rep a * rep b)
 
 (.+) :: (Num a, SameRep f g a, (f :/: g) a ~ Unit a) => f a -> g a -> f a
 a .+ b = emb (rep a + rep b)
+
+(.-) :: (Num a, SameRep f g a, (f :/: g) a ~ Unit a) => f a -> g a -> f a
+a .- b = emb (rep a - rep b)
 
 (./) :: (Fractional a, SameRep f g a, Rep ((f :/: g) a) ~ a, Repd ((f :/: g) a)) => f a -> g a -> (f :/: g) a
 a ./ b = emb (rep a / rep b)
