@@ -6,7 +6,7 @@
            , DataKinds
            , ConstraintKinds #-}
 
-module Metric (module GHC.TypeLits
+module Metric ( module GHC.TypeLits
               , Unit
               , Metre
               , Second
@@ -83,8 +83,9 @@ type family (a :/: b) :: * -> * where
   (a :/ b) :/: (c :/ d) = (a :*: d) :/: (b :*: c)
   (a :/ b) :/: c        = a :/: (b :*: c)
   a :/: (b :/ c)        = (a :*: c) :/: b
-  a :/: (c :* d)        = SortOut ((Upper ((EliminatedU a c) :/: d)) :/
-                          ((EliminatedL a c) :*: (Lower ((EliminatedU a c) :/: d))))
+  a :/: (c :* d)        =
+    SortOut ((Upper ((EliminatedU a c) :/: d)) :/
+            ((EliminatedL a c) :*: (Lower ((EliminatedU a c) :/: d))))
   a :/: c               = SortOut ((Upper ((EliminatedU a c))) :/ (EliminatedL a c))
 
 type family (SortOut a) :: * -> * where
@@ -117,16 +118,26 @@ type family (a :^: (n :: Nat)) :: * -> * where
 
 type SameRep f g a = (Repd (f a), Repd (g a), Rep (f a) ~ a, Rep (g a) ~ a)
 
-(.*) :: (Num a, SameRep f g a, Rep ((f :*: g) a) ~ a, Repd ((f :*: g) a)) => f a -> g a -> (f :*: g) a
+(.*) :: ( Num a
+        , SameRep f g a
+        , Rep ((f :*: g) a) ~ a
+        , Repd ((f :*: g) a)) => f a -> g a -> (f :*: g) a
 a .* b = emb (rep a * rep b)
 
-(.+) :: (Num a, SameRep f g a, (f :/: g) a ~ Unit a) => f a -> g a -> f a
+(.+) :: ( Num a
+        , SameRep f g a
+        , (f :/: g) a ~ Unit a) => f a -> g a -> f a
 a .+ b = emb (rep a + rep b)
 
-(.-) :: (Num a, SameRep f g a, (f :/: g) a ~ Unit a) => f a -> g a -> f a
+(.-) :: ( Num a
+        , SameRep f g a
+        , (f :/: g) a ~ Unit a) => f a -> g a -> f a
 a .- b = emb (rep a - rep b)
 
-(./) :: (Fractional a, SameRep f g a, Rep ((f :/: g) a) ~ a, Repd ((f :/: g) a)) => f a -> g a -> (f :/: g) a
+(./) :: ( Fractional a
+        , SameRep f g a
+        , Rep ((f :/: g) a) ~ a
+        , Repd ((f :/: g) a)) => f a -> g a -> (f :/: g) a
 a ./ b = emb (rep a / rep b)
 
 -- Examples
@@ -139,7 +150,8 @@ y = emb 3
 z :: Unit Float
 z = emb 2
 
--- Note that ex0 .+ ex1 gives a type error even though they are both represented as floats!
+-- Note that ex0 .+ ex1 gives a type error even though they are both
+-- represented as floats!
 ex0 :: Unit Float
 ex0 = (x .* y ./ (y .* x)) .+ z
 
